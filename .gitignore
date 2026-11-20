@@ -1,0 +1,14 @@
+data/
+.vendor/
+.venv/
+__pycache__/
+*.pyc
+.env
+.env.*
+*.db
+*.db-*
+output/
+dist/
+build/
+tmp*/
+*.log
