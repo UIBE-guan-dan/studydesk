@@ -1,15 +1,18 @@
 """Local storage, evidence retrieval and configurable AI adapters."""
-import json, os, re, sqlite3, urllib.request, urllib.error, uuid, hashlib, shutil
+import json, os, re, sqlite3, urllib.request, urllib.error, uuid, hashlib, shutil, sys
 from contextlib import contextmanager, closing
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
-DATA = ROOT / 'data'
+DATA = (Path(os.environ.get('LOCALAPPDATA', str(Path.home()))) / 'StudyDesk' / 'data'
+        if getattr(sys, 'frozen', False) else ROOT / 'data')
+if os.environ.get('STUDYDESK_DATA_DIR'):
+    DATA = Path(os.environ['STUDYDESK_DATA_DIR']).resolve()
 DEFAULTS = {'base': 'https://api.moonshot.cn/v1', 'model': '', 'speech_base': '', 'speech_model': 'whisper-1', 'local_model': 'large-v3-turbo', 'speech_language': 'zh', 'speech_hotwords': '', 'search_url': ''}
 
 class Store:
     def __init__(self, path=None):
-        DATA.mkdir(exist_ok=True)
+        DATA.mkdir(parents=True,exist_ok=True)
         self.path = str(path or DATA / 'study.db')
         with self.connect() as db:
             db.executescript('''CREATE TABLE IF NOT EXISTS courses(name TEXT PRIMARY KEY);

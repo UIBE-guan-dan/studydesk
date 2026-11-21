@@ -321,7 +321,7 @@ class LegacyApp(tk.Tk):
         self.speech_model=self.entry(right,'云端语音模型',self.settings['speech_model'])
         ttk.Label(right,text='本地语音模型（课堂页也可切换）').pack(anchor='w',pady=(9,3))
         ttk.Combobox(right,textvariable=self.local_model,values=['sensevoice','base','small','medium','large-v3','large-v3-turbo'],state='readonly').pack(fill='x')
-        ttk.Label(right,text='本地转写无需语音 API Key；首次需联网下载模型。\nKimi 文本接口和语音转写接口独立配置。\n\n数据位置：项目 data 文件夹。\n备份时关闭软件，复制整个 data 文件夹。',wraplength=430).pack(anchor='w',pady=20)
+        ttk.Label(right,text=f'本地转写无需语音 API Key；首次需联网下载模型。\nKimi 文本接口和语音转写接口独立配置。\n\n数据位置：{DATA}\n备份时关闭软件，复制整个 data 文件夹。',wraplength=430).pack(anchor='w',pady=20)
     def values(self):return {k:getattr(self,k).get().strip() for k in DEFAULTS}
     def save_config(self):
         (DATA/'settings.json').write_text(json.dumps(self.values(),ensure_ascii=False,indent=2),encoding='utf-8'); self.status.set('设置已保存，API Key 未写入文件')
@@ -338,7 +338,25 @@ from learning_ui import LearningUX
 from lecture_links import LectureUX
 from exam_ui import ExamUX
 from font_ui import FontSizeUX
-class App(FontSizeUX,ExamUX,LectureUX,LearningUX,WorkspaceUX,LegacyApp):
+from welcome_ui import WelcomeUX
+class App(WelcomeUX,FontSizeUX,ExamUX,LectureUX,LearningUX,WorkspaceUX,LegacyApp):
     pass
 
-if __name__=='__main__': App().mainloop()
+if __name__=='__main__':
+    if '--self-test' in sys.argv:
+        # Offline packaging check; use STUDYDESK_DATA_DIR to isolate test files.
+        try:
+            import av, sounddevice, faster_whisper, sherpa_onnx
+            from note_pdf import build_note_pdf
+            window=App();window.withdraw();window.update_idletasks()
+            pdf=build_note_pdf('打包验证','中文与公式阅读测试：$y = x + 1$',DATA/'smoke')
+            window.reader.load(pdf)
+            window.update_idletasks()
+            (DATA/'self-test.json').write_text(json.dumps({'ok':True,'av':av.__version__,'pdf':str(pdf)},ensure_ascii=False),encoding='utf-8')
+            window.destroy()
+        except Exception:
+            import traceback
+            DATA.mkdir(parents=True,exist_ok=True)
+            (DATA/'self-test.json').write_text(json.dumps({'ok':False,'error':traceback.format_exc()},ensure_ascii=False),encoding='utf-8')
+            sys.exit(1)
+    else: App().mainloop()

@@ -1,7 +1,8 @@
 """Local SenseVoice inference via sherpa-onnx; VAD limits each speech segment."""
 from pathlib import Path
 
-MODEL_DIR=Path(__file__).resolve().parent/'data/models/sherpa-onnx-sense-voice-zh-en-ja-ko-yue-int8-2024-07-17'
+from core import DATA
+MODEL_DIR=DATA/'models/sherpa-onnx-sense-voice-zh-en-ja-ko-yue-int8-2024-07-17'
 
 def transcribe_sensevoice(path,language='zh'):
     import sherpa_onnx
